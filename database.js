@@ -3,23 +3,62 @@ const fs = require("fs");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 
-const dataDirectory = process.env.DATA_DIR
-  ? path.resolve(process.env.DATA_DIR)
-  : __dirname;
+function resolveWritableDirectory() {
+  const preferredDir = process.env.DATA_DIR
+    ? path.resolve(process.env.DATA_DIR)
+    : path.join(__dirname, "data");
 
-if (!fs.existsSync(dataDirectory)) {
-  fs.mkdirSync(dataDirectory, { recursive: true });
+  try {
+    if (!fs.existsSync(preferredDir)) {
+      fs.mkdirSync(preferredDir, { recursive: true });
+    }
+
+    fs.accessSync(preferredDir, fs.constants.W_OK);
+    console.log(`Using data directory: ${preferredDir}`);
+    return preferredDir;
+  } catch (error) {
+    const fallbackDir = path.join(__dirname, "data");
+
+    if (!fs.existsSync(fallbackDir)) {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    }
+
+    console.warn(
+      `Preferred data directory is not writable: ${preferredDir}. Falling back to: ${fallbackDir}`
+    );
+
+    return fallbackDir;
+  }
 }
+
+const dataDirectory = resolveWritableDirectory();
 
 const databasePath = process.env.DB_PATH
   ? path.resolve(process.env.DB_PATH)
   : path.join(dataDirectory, "production_control.db");
 
-const db = new sqlite3.Database(databasePath, (err) => {
+let finalDatabasePath = databasePath;
+
+try {
+  const dbDir = path.dirname(databasePath);
+
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  fs.accessSync(dbDir, fs.constants.W_OK);
+} catch (error) {
+  finalDatabasePath = path.join(dataDirectory, "production_control.db");
+  console.warn(
+    `Configured DB path is not writable: ${databasePath}. Falling back to: ${finalDatabasePath}`
+  );
+}
+
+const db = new sqlite3.Database(finalDatabasePath, (err) => {
   if (err) {
     console.error("Database connection error:", err.message);
   } else {
-    console.log(`Connected to SQLite database at: ${databasePath}`);
+    console.log(`Connected to SQLite database at: ${finalDatabasePath}`);
   }
 });
 
