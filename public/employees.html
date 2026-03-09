@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employees - Production Control System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <h1>Employee Management</h1>
+        <p class="dashboard-subtitle">
+          Add, update, and manage employee records for workflow assignment
+        </p>
+      </div>
+
+      <div class="dashboard-user-area">
+        <span id="welcomeText">Welcome, Admin</span>
+        <button id="logoutBtn" class="secondary-btn">Logout</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/job-orders" class="nav-link">Job Orders</a>
+      <a href="/workflow" class="nav-link">Workflow Tracking</a>
+      <a href="/employees" class="nav-link active">Employees</a>
+      <a href="/productivity" class="nav-link">Employee Productivity</a>
+      <a href="/storage-movement" class="nav-link">Storage & Movement</a>
+      <a href="/reports" class="nav-link">Reports</a>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="dashboard-section">
+        <h2>Add New Employee</h2>
+        <p class="page-intro">
+          Use this form to register a new employee who can be assigned to production workflow steps.
+        </p>
+
+        <div class="form-panel">
+          <form id="employeeForm" class="job-order-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="employee_code">Employee Code</label>
+                <input type="text" id="employee_code" placeholder="Example: EMP-004" required />
+              </div>
+
+              <div class="form-group">
+                <label for="employee_full_name">Full Name</label>
+                <input type="text" id="employee_full_name" placeholder="Example: Maria Lopez" required />
+              </div>
+
+              <div class="form-group">
+                <label for="employee_role">Role</label>
+                <input type="text" id="employee_role" placeholder="Example: Cleaning Technician" required />
+              </div>
+
+              <div class="form-group">
+                <label for="employee_status">Status</label>
+                <select id="employee_status">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="primary-btn">Add Employee</button>
+            <p id="employeeMessage" class="form-message"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Employee List</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Employee Code</th>
+                  <th>Full Name</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="employeesTableBody">
+                <tr>
+                  <td colspan="6" class="empty-cell">Loading employees...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="kpi-note">
+            Active employees are available for workflow assignment. Inactive employees stay in records but are hidden from active assignment dropdowns.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

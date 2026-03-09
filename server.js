@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const { initializeDatabase, db } = require("./database");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 initializeDatabase();
 
@@ -88,6 +88,10 @@ app.get("/storage-movement", requireLogin, (req, res) => {
 
 app.get("/reports", requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "reports.html"));
+});
+
+app.get("/employees", requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "employees.html"));
 });
 
 app.post("/login", (req, res) => {
@@ -280,6 +284,121 @@ app.get("/api/employees", requireLogin, (req, res) => {
       return res.json({
         success: true,
         employees: rows,
+      });
+    }
+  );
+});
+
+app.get("/api/employees-management", requireLogin, (req, res) => {
+  db.all(
+    `SELECT id, employee_code, full_name, role, status
+     FROM employees
+     ORDER BY id DESC`,
+    (err, rows) => {
+      if (err) {
+        console.error("Employees management fetch error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to load employee records.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        employees: rows,
+      });
+    }
+  );
+});
+
+app.post("/api/employees", requireLogin, (req, res) => {
+  const { employee_code, full_name, role, status } = req.body;
+
+  if (!employee_code || !full_name || !role) {
+    return res.status(400).json({
+      success: false,
+      message: "Employee code, full name, and role are required.",
+    });
+  }
+
+  db.run(
+    `INSERT INTO employees (employee_code, full_name, role, status)
+     VALUES (?, ?, ?, ?)`,
+    [
+      employee_code.trim(),
+      full_name.trim(),
+      role.trim(),
+      status || "Active",
+    ],
+    function (err) {
+      if (err) {
+        console.error("Create employee error:", err.message);
+
+        if (err.message.includes("UNIQUE")) {
+          return res.status(400).json({
+            success: false,
+            message: "Employee code already exists.",
+          });
+        }
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to create employee.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Employee added successfully.",
+        employeeId: this.lastID,
+      });
+    }
+  );
+});
+
+app.put("/api/employees/:id", requireLogin, (req, res) => {
+  const { id } = req.params;
+  const { employee_code, full_name, role, status } = req.body;
+
+  if (!employee_code || !full_name || !role || !status) {
+    return res.status(400).json({
+      success: false,
+      message: "Employee code, full name, role, and status are required.",
+    });
+  }
+
+  db.run(
+    `UPDATE employees
+     SET employee_code = ?, full_name = ?, role = ?, status = ?
+     WHERE id = ?`,
+    [employee_code.trim(), full_name.trim(), role.trim(), status.trim(), id],
+    function (err) {
+      if (err) {
+        console.error("Update employee error:", err.message);
+
+        if (err.message.includes("UNIQUE")) {
+          return res.status(400).json({
+            success: false,
+            message: "Employee code already exists.",
+          });
+        }
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to update employee.",
+        });
+      }
+
+      if (!this.changes) {
+        return res.status(404).json({
+          success: false,
+          message: "Employee not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Employee updated successfully.",
       });
     }
   );
@@ -597,8 +716,6 @@ app.post("/api/movement-logs", requireLogin, (req, res) => {
         });
       }
 
-      const movementLogId = this.lastID;
-
       db.run(
         `UPDATE job_orders
          SET storage_location = ?
@@ -616,7 +733,7 @@ app.post("/api/movement-logs", requireLogin, (req, res) => {
           return res.json({
             success: true,
             message: "Movement log created successfully.",
-            movementLogId,
+            movementLogId: this.lastID,
           });
         }
       );
@@ -781,7 +898,8 @@ app.put("/api/workflow/:stepId", requireLogin, (req, res) => {
         "Returned to Store": "Completed",
       };
 
-      const mappedJobStatus = status === "Completed" ? jobStatusMap[step_name] || null : null;
+      const mappedJobStatus =
+        status === "Completed" ? jobStatusMap[step_name] || null : null;
 
       if (!mappedJobStatus || !job_order_id) {
         return res.json({

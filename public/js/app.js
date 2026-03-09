@@ -22,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadDelayedJobsReport();
   loadStoreVolumeReport();
   loadProductivitySummaryReport();
+  setupEmployeeForm();
+  loadEmployeesManagementTable();
 });
 
 function setupLoginForm() {
@@ -355,6 +357,191 @@ async function loadEmployees() {
     console.error("Load employees error:", error);
     employeesCache = [];
   }
+}
+
+function setupEmployeeForm() {
+  const employeeForm = document.getElementById("employeeForm");
+  const employeeMessage = document.getElementById("employeeMessage");
+
+  if (!employeeForm) {
+    return;
+  }
+
+  employeeForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const payload = {
+      employee_code: document.getElementById("employee_code").value.trim(),
+      full_name: document.getElementById("employee_full_name").value.trim(),
+      role: document.getElementById("employee_role").value.trim(),
+      status: document.getElementById("employee_status").value,
+    };
+
+    employeeMessage.textContent = "Saving employee...";
+    employeeMessage.className = "form-message";
+
+    try {
+      const response = await fetch("/api/employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        employeeMessage.textContent = result.message;
+        employeeMessage.className = "form-message success-message";
+        employeeForm.reset();
+        refreshAllOperationalViews();
+        loadEmployeesManagementTable();
+      } else {
+        employeeMessage.textContent = result.message;
+        employeeMessage.className = "form-message error-message";
+      }
+    } catch (error) {
+      console.error("Add employee error:", error);
+      employeeMessage.textContent = "Failed to save employee.";
+      employeeMessage.className = "form-message error-message";
+    }
+  });
+}
+
+async function loadEmployeesManagementTable() {
+  const tableBody = document.getElementById("employeesTableBody");
+
+  if (!tableBody) {
+    return;
+  }
+
+  try {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="empty-cell">Loading employees...</td>
+      </tr>
+    `;
+
+    const response = await fetch("/api/employees-management");
+    const result = await response.json();
+
+    if (!result.success) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="empty-cell">Failed to load employee records.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    if (result.employees.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="empty-cell">No employees found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tableBody.innerHTML = result.employees
+      .map((employee) => {
+        return `
+          <tr>
+            <td>${employee.id}</td>
+            <td>
+              <input type="text" class="workflow-input employee-code-input" data-id="${employee.id}" value="${escapeAttribute(employee.employee_code)}" />
+            </td>
+            <td>
+              <input type="text" class="workflow-input employee-name-input" data-id="${employee.id}" value="${escapeAttribute(employee.full_name)}" />
+            </td>
+            <td>
+              <input type="text" class="workflow-input employee-role-input" data-id="${employee.id}" value="${escapeAttribute(employee.role)}" />
+            </td>
+            <td>
+              <select class="workflow-input employee-status-input" data-id="${employee.id}">
+                <option value="Active" ${employee.status === "Active" ? "selected" : ""}>Active</option>
+                <option value="Inactive" ${employee.status === "Inactive" ? "selected" : ""}>Inactive</option>
+              </select>
+            </td>
+            <td>
+              <button class="secondary-btn employee-save-btn" data-id="${employee.id}" type="button">Save</button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    attachEmployeeSaveEvents();
+  } catch (error) {
+    console.error("Load employees management table error:", error);
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="empty-cell">Error loading employee records.</td>
+      </tr>
+    `;
+  }
+}
+
+function attachEmployeeSaveEvents() {
+  const saveButtons = document.querySelectorAll(".employee-save-btn");
+  const employeeMessage = document.getElementById("employeeMessage");
+
+  saveButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const employeeId = button.dataset.id;
+
+      const codeInput = document.querySelector(`.employee-code-input[data-id="${employeeId}"]`);
+      const nameInput = document.querySelector(`.employee-name-input[data-id="${employeeId}"]`);
+      const roleInput = document.querySelector(`.employee-role-input[data-id="${employeeId}"]`);
+      const statusInput = document.querySelector(`.employee-status-input[data-id="${employeeId}"]`);
+
+      const payload = {
+        employee_code: codeInput.value.trim(),
+        full_name: nameInput.value.trim(),
+        role: roleInput.value.trim(),
+        status: statusInput.value,
+      };
+
+      if (employeeMessage) {
+        employeeMessage.textContent = "Updating employee...";
+        employeeMessage.className = "form-message";
+      }
+
+      try {
+        const response = await fetch(`/api/employees/${employeeId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (employeeMessage) {
+          if (result.success) {
+            employeeMessage.textContent = result.message;
+            employeeMessage.className = "form-message success-message";
+          } else {
+            employeeMessage.textContent = result.message;
+            employeeMessage.className = "form-message error-message";
+          }
+        }
+
+        if (result.success) {
+          refreshAllOperationalViews();
+          loadEmployeesManagementTable();
+        }
+      } catch (error) {
+        console.error("Update employee error:", error);
+        if (employeeMessage) {
+          employeeMessage.textContent = "Failed to update employee.";
+          employeeMessage.className = "form-message error-message";
+        }
+      }
+    });
+  });
 }
 
 async function loadWorkflowJobOrders() {
@@ -1124,6 +1311,7 @@ function refreshAllOperationalViews() {
   loadDashboardStats();
   loadJobOrders();
   loadWorkflowJobOrders();
+  loadEmployees();
   loadProductivityData();
   loadMovementJobOrders();
   loadStorageOverview();
@@ -1133,6 +1321,7 @@ function refreshAllOperationalViews() {
   loadDelayedJobsReport();
   loadStoreVolumeReport();
   loadProductivitySummaryReport();
+  loadEmployeesManagementTable();
 }
 
 function renderStatusBadge(status) {
@@ -1177,6 +1366,10 @@ function getStatusBadgeClass(status) {
       return "badge-gray";
     case "delayed":
       return "badge-red";
+    case "active":
+      return "badge-green";
+    case "inactive":
+      return "badge-gray";
     default:
       return "badge-gray";
   }
