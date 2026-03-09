@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workflow Tracking - Production Control System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <h1>Workflow Step Tracking</h1>
+        <p class="dashboard-subtitle">
+          Track production steps, assigned employee, status, and time spent
+        </p>
+      </div>
+
+      <div class="dashboard-user-area">
+        <span id="welcomeText">Welcome, Admin</span>
+        <button id="logoutBtn" class="secondary-btn">Logout</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/job-orders" class="nav-link">Job Orders</a>
+      <a href="/workflow" class="nav-link active">Workflow Tracking</a>
+      <a href="/productivity" class="nav-link">Employee Productivity</a>
+      <a href="/storage-movement" class="nav-link">Storage & Movement</a>
+      <a href="/reports" class="nav-link">Reports</a>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="dashboard-section">
+        <h2>Select Job Order</h2>
+        <p class="page-intro">Load a job order to initialize or update its production workflow steps.</p>
+
+        <div class="form-panel">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="workflowJobOrderSelect">Job Order</label>
+              <select id="workflowJobOrderSelect">
+                <option value="">Select a job order</option>
+              </select>
+            </div>
+
+            <div class="workflow-actions">
+              <button id="initializeWorkflowBtn" class="primary-btn" type="button">
+                Initialize Standard Workflow
+              </button>
+              <button id="loadWorkflowBtn" class="secondary-btn" type="button">
+                Load Workflow
+              </button>
+            </div>
+          </div>
+
+          <p id="workflowMessage" class="form-message"></p>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Workflow Steps</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Step</th>
+                  <th>Assigned Employee</th>
+                  <th>Status</th>
+                  <th>Start Time</th>
+                  <th>End Time</th>
+                  <th>Time Spent (Minutes)</th>
+                  <th>Notes</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="workflowTableBody">
+                <tr>
+                  <td colspan="8" class="empty-cell">
+                    Select a job order and load the workflow.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="kpi-note">This page helps identify bottlenecks and improve accountability per production stage.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

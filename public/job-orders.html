@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Orders - Production Control System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <h1>Job Order Management</h1>
+        <p class="dashboard-subtitle">
+          Create, search, and monitor all service job orders
+        </p>
+      </div>
+
+      <div class="dashboard-user-area">
+        <span id="welcomeText">Welcome, Admin</span>
+        <button id="logoutBtn" class="secondary-btn">Logout</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/job-orders" class="nav-link active">Job Orders</a>
+      <a href="/workflow" class="nav-link">Workflow Tracking</a>
+      <a href="/productivity" class="nav-link">Employee Productivity</a>
+      <a href="/storage-movement" class="nav-link">Storage & Movement</a>
+      <a href="/reports" class="nav-link">Reports</a>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="dashboard-section">
+        <h2>Create New Job Order</h2>
+        <p class="page-intro">Use this form to register a new customer item into the production control system.</p>
+
+        <div class="form-panel">
+          <form id="jobOrderForm" class="job-order-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="customer_name">Customer Name</label>
+                <input type="text" id="customer_name" name="customer_name" required />
+              </div>
+
+              <div class="form-group">
+                <label for="store_id">Store / Branch</label>
+                <select id="store_id" name="store_id" required>
+                  <option value="">Select store</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="item_name">Item Name</label>
+                <input type="text" id="item_name" name="item_name" placeholder="Example: Nike Air Force 1" required />
+              </div>
+
+              <div class="form-group">
+                <label for="service_type">Service Type</label>
+                <input type="text" id="service_type" name="service_type" placeholder="Example: Deep Clean" required />
+              </div>
+
+              <div class="form-group">
+                <label for="priority_level">Priority Level</label>
+                <select id="priority_level" name="priority_level">
+                  <option value="Normal">Normal</option>
+                  <option value="High">High</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="due_date">Due Date</label>
+                <input type="date" id="due_date" name="due_date" />
+              </div>
+
+              <div class="form-group">
+                <label for="storage_location">Initial Storage Location</label>
+                <input type="text" id="storage_location" name="storage_location" placeholder="Example: Rack A3 / Shelf B2" />
+              </div>
+
+              <div class="form-group">
+                <label for="notes">Notes</label>
+                <input type="text" id="notes" name="notes" placeholder="Special instructions or remarks" />
+              </div>
+            </div>
+
+            <button type="submit" class="primary-btn">Create Job Order</button>
+            <p id="jobOrderMessage" class="form-message"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Search and Filter</h2>
+        <div class="filter-panel">
+          <div class="filter-grid">
+            <div class="form-group">
+              <label for="searchInput">Search</label>
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search by JO number, customer, item, service, or store"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="statusFilter">Status</label>
+              <select id="statusFilter">
+                <option value="">All Statuses</option>
+                <option value="Received">Received</option>
+                <option value="Inspection">Inspection</option>
+                <option value="Cleaning">Cleaning</option>
+                <option value="Drying">Drying</option>
+                <option value="Restoration">Restoration</option>
+                <option value="Quality Check">Quality Check</option>
+                <option value="Ready for Pickup">Ready for Pickup</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div class="filter-actions">
+              <button id="searchBtn" class="secondary-btn" type="button">Apply Filter</button>
+              <button id="resetBtn" class="secondary-btn light-btn" type="button">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Job Order List</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Job Order No.</th>
+                  <th>Customer</th>
+                  <th>Store</th>
+                  <th>Item</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Priority</th>
+                  <th>Date Received</th>
+                  <th>Due Date</th>
+                  <th>Storage</th>
+                </tr>
+              </thead>
+              <tbody id="jobOrdersTableBody">
+                <tr>
+                  <td colspan="10" class="empty-cell">Loading job orders...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="kpi-note">This table helps supervisors quickly monitor active workload and service status.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

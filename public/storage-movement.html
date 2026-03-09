@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storage and Movement Tracking - Production Control System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <h1>Storage and Movement Tracking</h1>
+        <p class="dashboard-subtitle">
+          Track physical item location, branch transfer, and movement history
+        </p>
+      </div>
+
+      <div class="dashboard-user-area">
+        <span id="welcomeText">Welcome, Admin</span>
+        <button id="logoutBtn" class="secondary-btn">Logout</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/job-orders" class="nav-link">Job Orders</a>
+      <a href="/workflow" class="nav-link">Workflow Tracking</a>
+      <a href="/productivity" class="nav-link">Employee Productivity</a>
+      <a href="/storage-movement" class="nav-link active">Storage & Movement</a>
+      <a href="/reports" class="nav-link">Reports</a>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="dashboard-section">
+        <h2>Record New Movement</h2>
+        <p class="page-intro">Use this form to log branch transfers and update the latest known storage location.</p>
+
+        <div class="form-panel">
+          <form id="movementForm" class="job-order-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="movement_job_order_id">Job Order</label>
+                <select id="movement_job_order_id" required>
+                  <option value="">Select a job order</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="from_location">From Location</label>
+                <input type="text" id="from_location" placeholder="Example: Sole Surgeon SM Clark" required />
+              </div>
+
+              <div class="form-group">
+                <label for="to_location">To Location</label>
+                <input type="text" id="to_location" placeholder="Example: Central Production Facility" required />
+              </div>
+
+              <div class="form-group">
+                <label for="movement_status">Movement Status</label>
+                <select id="movement_status">
+                  <option value="In Transit">In Transit</option>
+                  <option value="Received">Received</option>
+                  <option value="Ready for Dispatch">Ready for Dispatch</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="received_at">Received At</label>
+                <input type="datetime-local" id="received_at" />
+              </div>
+
+              <div class="form-group">
+                <label for="movement_storage_location">Updated Storage Location</label>
+                <input type="text" id="movement_storage_location" placeholder="Example: Rack A3 / Shelf B2" />
+              </div>
+
+              <div class="form-group full-span">
+                <label for="movement_notes">Notes</label>
+                <input type="text" id="movement_notes" placeholder="Courier details, transfer notes, remarks" />
+              </div>
+            </div>
+
+            <button type="submit" class="primary-btn">Save Movement Log</button>
+            <p id="movementMessage" class="form-message"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Current Storage Overview</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Job Order No.</th>
+                  <th>Customer</th>
+                  <th>Item</th>
+                  <th>Store</th>
+                  <th>Current Status</th>
+                  <th>Current Location</th>
+                  <th>Storage Location</th>
+                  <th>Latest Movement Status</th>
+                  <th>Last Moved</th>
+                </tr>
+              </thead>
+              <tbody id="storageOverviewTableBody">
+                <tr>
+                  <td colspan="9" class="empty-cell">Loading storage overview...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Movement History</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Job Order No.</th>
+                  <th>Customer</th>
+                  <th>Item</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Status</th>
+                  <th>Moved At</th>
+                  <th>Received At</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="movementLogsTableBody">
+                <tr>
+                  <td colspan="9" class="empty-cell">Loading movement logs...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="kpi-note">This movement trail supports physical control and reduces item-location confusion.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

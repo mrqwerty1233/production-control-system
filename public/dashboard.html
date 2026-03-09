@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Production Control System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <h1>Production Control Dashboard</h1>
+        <p class="dashboard-subtitle">
+          Centralized operational visibility for Sole Surgeon
+        </p>
+      </div>
+
+      <div class="dashboard-user-area">
+        <span id="welcomeText">Welcome, Admin</span>
+        <button id="logoutBtn" class="secondary-btn">Logout</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a href="/dashboard" class="nav-link active">Dashboard</a>
+      <a href="/job-orders" class="nav-link">Job Orders</a>
+      <a href="/workflow" class="nav-link">Workflow Tracking</a>
+      <a href="/productivity" class="nav-link">Employee Productivity</a>
+      <a href="/storage-movement" class="nav-link">Storage & Movement</a>
+      <a href="/reports" class="nav-link">Reports</a>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="stats-grid">
+        <div class="stat-card">
+          <h2>Total Job Orders</h2>
+          <p class="stat-number" id="totalJobOrders">0</p>
+          <span class="stat-label">Current recorded jobs</span>
+        </div>
+
+        <div class="stat-card">
+          <h2>In Production</h2>
+          <p class="stat-number" id="inProduction">0</p>
+          <span class="stat-label">Active production items</span>
+        </div>
+
+        <div class="stat-card">
+          <h2>Completed Today</h2>
+          <p class="stat-number" id="completedToday">0</p>
+          <span class="stat-label">Finished service jobs</span>
+        </div>
+
+        <div class="stat-card alert-card">
+          <h2>Delayed Jobs</h2>
+          <p class="stat-number" id="delayedJobs">0</p>
+          <span class="stat-label">Requires immediate follow-up</span>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Quick Actions</h2>
+        <div class="quick-actions">
+          <a href="/job-orders" class="primary-btn">Job Order Management</a>
+          <a href="/workflow" class="primary-btn">Workflow Tracking</a>
+          <a href="/productivity" class="primary-btn">Productivity Report</a>
+          <a href="/storage-movement" class="primary-btn">Storage & Movement</a>
+          <a href="/reports" class="primary-btn">Management Reports</a>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Management Focus</h2>
+        <div class="dashboard-highlight-grid">
+          <div class="highlight-panel">
+            <h3>Operational Control</h3>
+            <p>
+              This system helps track job flow from branch intake to production,
+              employee handling, storage, movement, and completion.
+            </p>
+          </div>
+
+          <div class="highlight-panel">
+            <h3>Scalable Internal Process</h3>
+            <p>
+              The structure supports growth across multiple mall-based stores
+              and a centralized production facility.
+            </p>
+          </div>
+
+          <div class="highlight-panel">
+            <h3>Management Visibility</h3>
+            <p>
+              Dashboard metrics and reports help supervisors identify delays,
+              compare workload, and improve operations.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Portfolio Value</h2>
+        <div class="info-panel">
+          <p>
+            This project demonstrates internal systems thinking for a growing
+            service business. It combines job order control, workflow tracking,
+            productivity visibility, storage monitoring, movement logging, and
+            management reporting in one system.
+          </p>
+          <p>
+            It is designed to reflect the kind of process improvement and
+            operational visibility expected from a Systems & Automation Specialist.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

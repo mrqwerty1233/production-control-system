@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: production-control-system
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+      - key: DB_PATH
+        value: /var/data/production_control.db
+    disk:
+      name: production-control-disk
+      mountPath: /var/data
+      sizeGB: 1

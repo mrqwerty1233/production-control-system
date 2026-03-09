@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports - Production Control System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <h1>Reports and Management Insights</h1>
+        <p class="dashboard-subtitle">
+          Summary reporting for operations, delays, branch volume, and productivity
+        </p>
+      </div>
+
+      <div class="dashboard-user-area">
+        <span id="welcomeText">Welcome, Admin</span>
+        <button id="logoutBtn" class="secondary-btn">Logout</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/job-orders" class="nav-link">Job Orders</a>
+      <a href="/workflow" class="nav-link">Workflow Tracking</a>
+      <a href="/productivity" class="nav-link">Employee Productivity</a>
+      <a href="/storage-movement" class="nav-link">Storage & Movement</a>
+      <a href="/reports" class="nav-link active">Reports</a>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="stats-grid">
+        <div class="stat-card">
+          <h2>Total Job Orders</h2>
+          <p class="stat-number" id="reportTotalJobOrders">0</p>
+          <span class="stat-label">All recorded job orders</span>
+        </div>
+
+        <div class="stat-card">
+          <h2>Completed Jobs</h2>
+          <p class="stat-number" id="reportCompletedJobs">0</p>
+          <span class="stat-label">Finished service jobs</span>
+        </div>
+
+        <div class="stat-card">
+          <h2>Delayed Jobs</h2>
+          <p class="stat-number" id="reportDelayedJobs">0</p>
+          <span class="stat-label">Jobs past due date</span>
+        </div>
+
+        <div class="stat-card">
+          <h2>Movement Logs</h2>
+          <p class="stat-number" id="reportMovementLogs">0</p>
+          <span class="stat-label">Recorded item transfers</span>
+        </div>
+
+        <div class="stat-card">
+          <h2>Active Employees</h2>
+          <p class="stat-number" id="reportActiveEmployees">0</p>
+          <span class="stat-label">Current production staff</span>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Job Status Report</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Total Job Orders</th>
+                </tr>
+              </thead>
+              <tbody id="jobStatusReportTableBody">
+                <tr>
+                  <td colspan="2" class="empty-cell">Loading job status report...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Delayed Jobs Report</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Job Order No.</th>
+                  <th>Customer</th>
+                  <th>Item</th>
+                  <th>Store</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                </tr>
+              </thead>
+              <tbody id="delayedJobsReportTableBody">
+                <tr>
+                  <td colspan="6" class="empty-cell">Loading delayed jobs report...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Store Volume Report</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Store</th>
+                  <th>Mall Location</th>
+                  <th>Total Job Orders</th>
+                </tr>
+              </thead>
+              <tbody id="storeVolumeReportTableBody">
+                <tr>
+                  <td colspan="3" class="empty-cell">Loading store volume report...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Productivity Summary Report</h2>
+        <div class="table-panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Employee Code</th>
+                  <th>Employee Name</th>
+                  <th>Role</th>
+                  <th>Completed Steps</th>
+                  <th>Total Time Spent (Minutes)</th>
+                </tr>
+              </thead>
+              <tbody id="productivitySummaryReportTableBody">
+                <tr>
+                  <td colspan="5" class="empty-cell">Loading productivity summary...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Management Insights</h2>
+        <div class="card-grid">
+          <div class="card">
+            <h3>Delay Monitoring</h3>
+            <p>Identify overdue items early and prioritize corrective action before turnaround is affected.</p>
+          </div>
+
+          <div class="card">
+            <h3>Branch Demand Visibility</h3>
+            <p>Compare store workload to support staffing, logistics, and service planning.</p>
+          </div>
+
+          <div class="card">
+            <h3>Productivity Review</h3>
+            <p>Review completed workflow output and time usage to support coaching and process improvement.</p>
+          </div>
+
+          <div class="card">
+            <h3>Decision Support</h3>
+            <p>This reporting layer turns operational records into management-ready information.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
