@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadDashboardStats();
   loadStores();
   setupJobOrderForm();
+  setupEditJobOrderForm();
   setupJobOrderFilters();
   loadJobOrders();
   loadWorkflowJobOrders();
@@ -152,10 +153,7 @@ async function loadDashboardStats() {
 
 async function loadStores() {
   const storeSelect = document.getElementById("store_id");
-
-  if (!storeSelect) {
-    return;
-  }
+  const editStoreSelect = document.getElementById("edit_store_id");
 
   try {
     const response = await fetch("/api/stores");
@@ -165,14 +163,25 @@ async function loadStores() {
       return;
     }
 
-    storeSelect.innerHTML = `<option value="">Select store</option>`;
+    if (storeSelect) {
+      storeSelect.innerHTML = `<option value="">Select store</option>`;
+      result.stores.forEach((store) => {
+        const option = document.createElement("option");
+        option.value = store.id;
+        option.textContent = `${store.store_name} - ${store.mall_location}`;
+        storeSelect.appendChild(option);
+      });
+    }
 
-    result.stores.forEach((store) => {
-      const option = document.createElement("option");
-      option.value = store.id;
-      option.textContent = `${store.store_name} - ${store.mall_location}`;
-      storeSelect.appendChild(option);
-    });
+    if (editStoreSelect) {
+      editStoreSelect.innerHTML = `<option value="">Select store</option>`;
+      result.stores.forEach((store) => {
+        const option = document.createElement("option");
+        option.value = store.id;
+        option.textContent = `${store.store_name} - ${store.mall_location}`;
+        editStoreSelect.appendChild(option);
+      });
+    }
   } catch (error) {
     console.error("Load stores error:", error);
   }
@@ -229,6 +238,106 @@ function setupJobOrderForm() {
       console.error("Create job order error:", error);
     }
   });
+}
+
+function setupEditJobOrderForm() {
+  const editForm = document.getElementById("editJobOrderForm");
+  const clearBtn = document.getElementById("clearEditJobOrderBtn");
+  const editMessage = document.getElementById("editJobOrderMessage");
+
+  if (editForm) {
+    editForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const jobOrderId = document.getElementById("edit_job_order_id").value;
+
+      if (!jobOrderId) {
+        editMessage.textContent = "Please click Edit on a job order first.";
+        editMessage.className = "form-message error-message";
+        return;
+      }
+
+      const payload = {
+        customer_name: document.getElementById("edit_customer_name").value.trim(),
+        store_id: document.getElementById("edit_store_id").value,
+        item_name: document.getElementById("edit_item_name").value.trim(),
+        service_type: document.getElementById("edit_service_type").value.trim(),
+        current_status: document.getElementById("edit_current_status").value,
+        priority_level: document.getElementById("edit_priority_level").value,
+        due_date: document.getElementById("edit_due_date").value,
+        storage_location: document.getElementById("edit_storage_location").value.trim(),
+        notes: document.getElementById("edit_notes").value.trim(),
+      };
+
+      editMessage.textContent = "Updating job order...";
+      editMessage.className = "form-message";
+
+      try {
+        const response = await fetch(`/api/job-orders/${jobOrderId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          editMessage.textContent = result.message;
+          editMessage.className = "form-message success-message";
+          refreshAllOperationalViews();
+        } else {
+          editMessage.textContent = result.message;
+          editMessage.className = "form-message error-message";
+        }
+      } catch (error) {
+        console.error("Update job order error:", error);
+        editMessage.textContent = "Failed to update job order.";
+        editMessage.className = "form-message error-message";
+      }
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", clearEditJobOrderForm);
+  }
+}
+
+function clearEditJobOrderForm() {
+  const editMessage = document.getElementById("editJobOrderMessage");
+
+  const fields = [
+    "edit_job_order_id",
+    "edit_job_order_number",
+    "edit_customer_name",
+    "edit_store_id",
+    "edit_item_name",
+    "edit_service_type",
+    "edit_current_status",
+    "edit_priority_level",
+    "edit_due_date",
+    "edit_storage_location",
+    "edit_notes",
+  ];
+
+  fields.forEach((fieldId) => {
+    const field = document.getElementById(fieldId);
+    if (!field) {
+      return;
+    }
+
+    if (field.tagName === "SELECT") {
+      field.selectedIndex = 0;
+    } else {
+      field.value = "";
+    }
+  });
+
+  if (editMessage) {
+    editMessage.textContent = "";
+    editMessage.className = "form-message";
+  }
 }
 
 function setupJobOrderFilters() {
@@ -289,7 +398,7 @@ async function loadJobOrders() {
   try {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="10" class="empty-cell">Loading job orders...</td>
+        <td colspan="11" class="empty-cell">Loading job orders...</td>
       </tr>
     `;
 
@@ -299,7 +408,7 @@ async function loadJobOrders() {
     if (!result.success) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="10" class="empty-cell">Failed to load job orders.</td>
+          <td colspan="11" class="empty-cell">Failed to load job orders.</td>
         </tr>
       `;
       return;
@@ -308,7 +417,7 @@ async function loadJobOrders() {
     if (result.jobOrders.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="10" class="empty-cell">No job orders found.</td>
+          <td colspan="11" class="empty-cell">No job orders found.</td>
         </tr>
       `;
       return;
@@ -328,17 +437,121 @@ async function loadJobOrders() {
             <td>${formatDate(job.date_received)}</td>
             <td>${job.due_date ? formatDate(job.due_date) : "-"}</td>
             <td>${escapeHtml(job.storage_location || "-")}</td>
+            <td>
+              <div class="quick-actions">
+                <button class="secondary-btn edit-job-order-btn" data-id="${job.id}" type="button">Edit</button>
+                <button class="secondary-btn light-btn archive-job-order-btn" data-id="${job.id}" type="button">Archive</button>
+              </div>
+            </td>
           </tr>
         `;
       })
       .join("");
+
+    attachJobOrderActionEvents();
   } catch (error) {
     console.error("Load job orders error:", error);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="10" class="empty-cell">Error loading job orders.</td>
+        <td colspan="11" class="empty-cell">Error loading job orders.</td>
       </tr>
     `;
+  }
+}
+
+function attachJobOrderActionEvents() {
+  const editButtons = document.querySelectorAll(".edit-job-order-btn");
+  const archiveButtons = document.querySelectorAll(".archive-job-order-btn");
+
+  editButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const jobOrderId = button.dataset.id;
+      await loadJobOrderForEdit(jobOrderId);
+    });
+  });
+
+  archiveButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const jobOrderId = button.dataset.id;
+      const confirmed = window.confirm("Are you sure you want to archive this job order?");
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/job-orders/${jobOrderId}/archive`, {
+          method: "PUT",
+        });
+
+        const result = await response.json();
+        const editMessage = document.getElementById("editJobOrderMessage");
+
+        if (editMessage) {
+          if (result.success) {
+            editMessage.textContent = result.message;
+            editMessage.className = "form-message success-message";
+          } else {
+            editMessage.textContent = result.message;
+            editMessage.className = "form-message error-message";
+          }
+        }
+
+        if (result.success) {
+          clearEditJobOrderForm();
+          refreshAllOperationalViews();
+        }
+      } catch (error) {
+        console.error("Archive job order error:", error);
+      }
+    });
+  });
+}
+
+async function loadJobOrderForEdit(jobOrderId) {
+  const editMessage = document.getElementById("editJobOrderMessage");
+
+  try {
+    const response = await fetch(`/api/job-orders/${jobOrderId}`);
+    const result = await response.json();
+
+    if (!result.success) {
+      if (editMessage) {
+        editMessage.textContent = result.message;
+        editMessage.className = "form-message error-message";
+      }
+      return;
+    }
+
+    const job = result.jobOrder;
+
+    document.getElementById("edit_job_order_id").value = job.id;
+    document.getElementById("edit_job_order_number").value = job.job_order_number || "";
+    document.getElementById("edit_customer_name").value = job.customer_name || "";
+    document.getElementById("edit_store_id").value = job.store_id || "";
+    document.getElementById("edit_item_name").value = job.item_name || "";
+    document.getElementById("edit_service_type").value = job.service_type || "";
+    document.getElementById("edit_current_status").value = job.current_status || "Received";
+    document.getElementById("edit_priority_level").value = job.priority_level || "Normal";
+    document.getElementById("edit_due_date").value = job.due_date || "";
+    document.getElementById("edit_storage_location").value = job.storage_location || "";
+    document.getElementById("edit_notes").value = job.notes || "";
+
+    if (editMessage) {
+      editMessage.textContent = "Job order loaded for editing.";
+      editMessage.className = "form-message success-message";
+    }
+
+    document.getElementById("edit_customer_name").scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  } catch (error) {
+    console.error("Load job order for edit error:", error);
+    if (editMessage) {
+      editMessage.textContent = "Failed to load job order for editing.";
+      editMessage.className = "form-message error-message";
+    }
   }
 }
 
@@ -1429,10 +1642,8 @@ function formatDateTimeLocal(dateString) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
 
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${year}-${month}-${day}`;
 }
 
 function formatDateTimeDisplay(dateString) {

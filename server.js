@@ -175,75 +175,81 @@ app.get("/api/dashboard/stats", requireLogin, (req, res) => {
     delayedJobs: 0,
   };
 
-  db.get(`SELECT COUNT(*) AS count FROM job_orders`, (err, totalRow) => {
-    if (err) {
-      console.error("Dashboard total error:", err.message);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to load dashboard stats.",
-      });
-    }
+  db.get(
+    `SELECT COUNT(*) AS count
+     FROM job_orders
+     WHERE current_status != 'Archived'`,
+    (err, totalRow) => {
+      if (err) {
+        console.error("Dashboard total error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to load dashboard stats.",
+        });
+      }
 
-    stats.totalJobOrders = totalRow.count;
+      stats.totalJobOrders = totalRow.count;
 
-    db.get(
-      `SELECT COUNT(*) AS count
-       FROM job_orders
-       WHERE current_status IN ('Inspection', 'Cleaning', 'Drying', 'Restoration', 'Quality Check', 'In Production', 'Ready for Pickup')`,
-      (err2, productionRow) => {
-        if (err2) {
-          console.error("Dashboard production error:", err2.message);
-          return res.status(500).json({
-            success: false,
-            message: "Failed to load dashboard stats.",
-          });
-        }
+      db.get(
+        `SELECT COUNT(*) AS count
+         FROM job_orders
+         WHERE current_status IN ('Inspection', 'Cleaning', 'Drying', 'Restoration', 'Quality Check', 'In Production', 'Ready for Pickup')`,
+        (err2, productionRow) => {
+          if (err2) {
+            console.error("Dashboard production error:", err2.message);
+            return res.status(500).json({
+              success: false,
+              message: "Failed to load dashboard stats.",
+            });
+          }
 
-        stats.inProduction = productionRow.count;
+          stats.inProduction = productionRow.count;
 
-        db.get(
-          `SELECT COUNT(*) AS count
-           FROM job_orders
-           WHERE DATE(date_received) = DATE('now') AND current_status = 'Completed'`,
-          (err3, completedRow) => {
-            if (err3) {
-              console.error("Dashboard completed error:", err3.message);
-              return res.status(500).json({
-                success: false,
-                message: "Failed to load dashboard stats.",
-              });
-            }
-
-            stats.completedToday = completedRow.count;
-
-            db.get(
-              `SELECT COUNT(*) AS count
-               FROM job_orders
-               WHERE due_date IS NOT NULL
-                 AND DATE(due_date) < DATE('now')
-                 AND current_status != 'Completed'`,
-              (err4, delayedRow) => {
-                if (err4) {
-                  console.error("Dashboard delayed error:", err4.message);
-                  return res.status(500).json({
-                    success: false,
-                    message: "Failed to load dashboard stats.",
-                  });
-                }
-
-                stats.delayedJobs = delayedRow.count;
-
-                return res.json({
-                  success: true,
-                  stats,
+          db.get(
+            `SELECT COUNT(*) AS count
+             FROM job_orders
+             WHERE DATE(date_received) = DATE('now')
+               AND current_status = 'Completed'`,
+            (err3, completedRow) => {
+              if (err3) {
+                console.error("Dashboard completed error:", err3.message);
+                return res.status(500).json({
+                  success: false,
+                  message: "Failed to load dashboard stats.",
                 });
               }
-            );
-          }
-        );
-      }
-    );
-  });
+
+              stats.completedToday = completedRow.count;
+
+              db.get(
+                `SELECT COUNT(*) AS count
+                 FROM job_orders
+                 WHERE due_date IS NOT NULL
+                   AND DATE(due_date) < DATE('now')
+                   AND current_status NOT IN ('Completed', 'Archived')`,
+                (err4, delayedRow) => {
+                  if (err4) {
+                    console.error("Dashboard delayed error:", err4.message);
+                    return res.status(500).json({
+                      success: false,
+                      message: "Failed to load dashboard stats.",
+                    });
+                  }
+
+                  stats.delayedJobs = delayedRow.count;
+
+                  return res.json({
+                    success: true,
+                    stats,
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
 });
 
 app.get("/api/stores", requireLogin, (req, res) => {
@@ -520,6 +526,7 @@ app.get("/api/job-orders", requireLogin, (req, res) => {
       job_orders.id,
       job_orders.job_order_number,
       job_orders.customer_name,
+      job_orders.store_id,
       job_orders.item_name,
       job_orders.service_type,
       job_orders.current_status,
@@ -527,10 +534,11 @@ app.get("/api/job-orders", requireLogin, (req, res) => {
       job_orders.date_received,
       job_orders.due_date,
       job_orders.storage_location,
+      job_orders.notes,
       stores.store_name
     FROM job_orders
     LEFT JOIN stores ON job_orders.store_id = stores.id
-    WHERE 1 = 1
+    WHERE job_orders.current_status != 'Archived'
   `;
 
   const params = [];
@@ -572,10 +580,155 @@ app.get("/api/job-orders", requireLogin, (req, res) => {
   });
 });
 
+app.get("/api/job-orders/:id", requireLogin, (req, res) => {
+  const { id } = req.params;
+
+  db.get(
+    `SELECT
+      id,
+      job_order_number,
+      customer_name,
+      store_id,
+      item_name,
+      service_type,
+      current_status,
+      priority_level,
+      due_date,
+      storage_location,
+      notes
+     FROM job_orders
+     WHERE id = ?`,
+    [id],
+    (err, row) => {
+      if (err) {
+        console.error("Fetch single job order error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to load job order details.",
+        });
+      }
+
+      if (!row) {
+        return res.status(404).json({
+          success: false,
+          message: "Job order not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        jobOrder: row,
+      });
+    }
+  );
+});
+
+app.put("/api/job-orders/:id", requireLogin, (req, res) => {
+  const { id } = req.params;
+  const {
+    customer_name,
+    store_id,
+    item_name,
+    service_type,
+    current_status,
+    priority_level,
+    due_date,
+    storage_location,
+    notes,
+  } = req.body;
+
+  if (!customer_name || !store_id || !item_name || !service_type || !current_status) {
+    return res.status(400).json({
+      success: false,
+      message: "Customer name, store, item name, service type, and status are required.",
+    });
+  }
+
+  db.run(
+    `UPDATE job_orders
+     SET customer_name = ?,
+         store_id = ?,
+         item_name = ?,
+         service_type = ?,
+         current_status = ?,
+         priority_level = ?,
+         due_date = ?,
+         storage_location = ?,
+         notes = ?
+     WHERE id = ?`,
+    [
+      customer_name.trim(),
+      store_id,
+      item_name.trim(),
+      service_type.trim(),
+      current_status.trim(),
+      priority_level || "Normal",
+      due_date || null,
+      storage_location || "",
+      notes || "",
+      id,
+    ],
+    function (err) {
+      if (err) {
+        console.error("Update job order error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to update job order.",
+        });
+      }
+
+      if (!this.changes) {
+        return res.status(404).json({
+          success: false,
+          message: "Job order not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Job order updated successfully.",
+      });
+    }
+  );
+});
+
+app.put("/api/job-orders/:id/archive", requireLogin, (req, res) => {
+  const { id } = req.params;
+
+  db.run(
+    `UPDATE job_orders
+     SET current_status = 'Archived'
+     WHERE id = ?`,
+    [id],
+    function (err) {
+      if (err) {
+        console.error("Archive job order error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to archive job order.",
+        });
+      }
+
+      if (!this.changes) {
+        return res.status(404).json({
+          success: false,
+          message: "Job order not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Job order archived successfully.",
+      });
+    }
+  );
+});
+
 app.get("/api/job-orders-simple", requireLogin, (req, res) => {
   db.all(
     `SELECT id, job_order_number, customer_name, item_name, current_status
      FROM job_orders
+     WHERE current_status != 'Archived'
      ORDER BY id DESC`,
     (err, rows) => {
       if (err) {
@@ -618,6 +771,7 @@ app.get("/api/storage-overview", requireLogin, (req, res) => {
         GROUP BY job_order_id
       ) latest ON ml1.id = latest.max_id
     ) latest_logs ON latest_logs.job_order_id = job_orders.id
+    WHERE job_orders.current_status != 'Archived'
     ORDER BY job_orders.id DESC
   `;
 
@@ -653,6 +807,7 @@ app.get("/api/movement-logs", requireLogin, (req, res) => {
       job_orders.item_name
     FROM movement_logs
     INNER JOIN job_orders ON movement_logs.job_order_id = job_orders.id
+    WHERE job_orders.current_status != 'Archived'
     ORDER BY movement_logs.id DESC
   `;
 
@@ -941,83 +1096,88 @@ app.get("/api/reports/summary", requireLogin, (req, res) => {
     activeEmployees: 0,
   };
 
-  db.get(`SELECT COUNT(*) AS count FROM job_orders`, (err1, totalJobsRow) => {
-    if (err1) {
-      console.error("Reports summary total jobs error:", err1.message);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to load reports summary.",
-      });
-    }
+  db.get(
+    `SELECT COUNT(*) AS count
+     FROM job_orders
+     WHERE current_status != 'Archived'`,
+    (err1, totalJobsRow) => {
+      if (err1) {
+        console.error("Reports summary total jobs error:", err1.message);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to load reports summary.",
+        });
+      }
 
-    summary.totalJobOrders = totalJobsRow.count;
+      summary.totalJobOrders = totalJobsRow.count;
 
-    db.get(
-      `SELECT COUNT(*) AS count FROM job_orders WHERE current_status = 'Completed'`,
-      (err2, completedRow) => {
-        if (err2) {
-          console.error("Reports summary completed jobs error:", err2.message);
-          return res.status(500).json({
-            success: false,
-            message: "Failed to load reports summary.",
-          });
-        }
+      db.get(
+        `SELECT COUNT(*) AS count FROM job_orders WHERE current_status = 'Completed'`,
+        (err2, completedRow) => {
+          if (err2) {
+            console.error("Reports summary completed jobs error:", err2.message);
+            return res.status(500).json({
+              success: false,
+              message: "Failed to load reports summary.",
+            });
+          }
 
-        summary.completedJobs = completedRow.count;
+          summary.completedJobs = completedRow.count;
 
-        db.get(
-          `SELECT COUNT(*) AS count
-           FROM job_orders
-           WHERE due_date IS NOT NULL
-             AND DATE(due_date) < DATE('now')
-             AND current_status != 'Completed'`,
-          (err3, delayedRow) => {
-            if (err3) {
-              console.error("Reports summary delayed jobs error:", err3.message);
-              return res.status(500).json({
-                success: false,
-                message: "Failed to load reports summary.",
-              });
-            }
-
-            summary.delayedJobs = delayedRow.count;
-
-            db.get(`SELECT COUNT(*) AS count FROM movement_logs`, (err4, movementRow) => {
-              if (err4) {
-                console.error("Reports summary movement logs error:", err4.message);
+          db.get(
+            `SELECT COUNT(*) AS count
+             FROM job_orders
+             WHERE due_date IS NOT NULL
+               AND DATE(due_date) < DATE('now')
+               AND current_status NOT IN ('Completed', 'Archived')`,
+            (err3, delayedRow) => {
+              if (err3) {
+                console.error("Reports summary delayed jobs error:", err3.message);
                 return res.status(500).json({
                   success: false,
                   message: "Failed to load reports summary.",
                 });
               }
 
-              summary.totalMovementLogs = movementRow.count;
+              summary.delayedJobs = delayedRow.count;
 
-              db.get(
-                `SELECT COUNT(*) AS count FROM employees WHERE status = 'Active'`,
-                (err5, employeeRow) => {
-                  if (err5) {
-                    console.error("Reports summary employees error:", err5.message);
-                    return res.status(500).json({
-                      success: false,
-                      message: "Failed to load reports summary.",
-                    });
-                  }
-
-                  summary.activeEmployees = employeeRow.count;
-
-                  return res.json({
-                    success: true,
-                    summary,
+              db.get(`SELECT COUNT(*) AS count FROM movement_logs`, (err4, movementRow) => {
+                if (err4) {
+                  console.error("Reports summary movement logs error:", err4.message);
+                  return res.status(500).json({
+                    success: false,
+                    message: "Failed to load reports summary.",
                   });
                 }
-              );
-            });
-          }
-        );
-      }
-    );
-  });
+
+                summary.totalMovementLogs = movementRow.count;
+
+                db.get(
+                  `SELECT COUNT(*) AS count FROM employees WHERE status = 'Active'`,
+                  (err5, employeeRow) => {
+                    if (err5) {
+                      console.error("Reports summary employees error:", err5.message);
+                      return res.status(500).json({
+                        success: false,
+                        message: "Failed to load reports summary.",
+                      });
+                    }
+
+                    summary.activeEmployees = employeeRow.count;
+
+                    return res.json({
+                      success: true,
+                      summary,
+                    });
+                  }
+                );
+              });
+            }
+          );
+        }
+      );
+    }
+  );
 });
 
 app.get("/api/reports/job-status", requireLogin, (req, res) => {
@@ -1026,6 +1186,7 @@ app.get("/api/reports/job-status", requireLogin, (req, res) => {
       current_status,
       COUNT(*) AS total
     FROM job_orders
+    WHERE current_status != 'Archived'
     GROUP BY current_status
     ORDER BY total DESC, current_status ASC
   `;
@@ -1059,7 +1220,7 @@ app.get("/api/reports/delayed-jobs", requireLogin, (req, res) => {
     LEFT JOIN stores ON job_orders.store_id = stores.id
     WHERE job_orders.due_date IS NOT NULL
       AND DATE(job_orders.due_date) < DATE('now')
-      AND job_orders.current_status != 'Completed'
+      AND job_orders.current_status NOT IN ('Completed', 'Archived')
     ORDER BY job_orders.due_date ASC, job_orders.id DESC
   `;
 
@@ -1086,7 +1247,9 @@ app.get("/api/reports/store-volume", requireLogin, (req, res) => {
       stores.mall_location,
       COUNT(job_orders.id) AS total_job_orders
     FROM stores
-    LEFT JOIN job_orders ON stores.id = job_orders.store_id
+    LEFT JOIN job_orders
+      ON stores.id = job_orders.store_id
+     AND job_orders.current_status != 'Archived'
     GROUP BY stores.id, stores.store_name, stores.mall_location
     ORDER BY total_job_orders DESC, stores.store_name ASC
   `;
