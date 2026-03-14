@@ -1,7 +1,7 @@
 {
   "name": "production-control-system",
   "version": "1.0.0",
-  "description": "Production Control System Website for Sole Surgeon portfolio project",
+  "description": "Production Control System Website for Sample Company portfolio project",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

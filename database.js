@@ -189,9 +189,9 @@ function seedStores() {
     }
 
     const stores = [
-      ["Sole Surgeon SM Clark", "SM City Clark"],
-      ["Sole Surgeon Trinoma", "Trinoma Mall"],
-      ["Sole Surgeon SM Pampanga", "SM City Pampanga"],
+      ["Sample Company SM Clark", "SM City Clark"],
+      ["Sample Company Trinoma", "Trinoma Mall"],
+      ["Sample Company SM Pampanga", "SM City Pampanga"],
     ];
 
     const stmt = db.prepare(

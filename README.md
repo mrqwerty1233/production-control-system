@@ -1,6 +1,6 @@
 # Production Control System Website
 
-A portfolio project built to simulate a real internal operations platform for a growing multi-branch service business like Sole Surgeon.
+A portfolio project built to simulate a real internal operations platform for a growing multi-branch service business.
 
 ## Project Purpose
 
